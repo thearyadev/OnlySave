@@ -258,7 +258,7 @@ class OnlySave:
 
         for f in os.listdir("./" + self.current_user):
             os.rename("./" + self.current_user + "/" + f, "./" + self.current_user + "/" + f.replace("gif", "jpg"))
-
+        os.startfile("./" + self.current_user)
         self.master.destroy()
         self.driver.quit()
         os.startfile("OnlySave.exe")
