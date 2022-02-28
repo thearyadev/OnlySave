@@ -14,19 +14,19 @@ import shutil
 
 import os
 
-
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
 
 
-def relative_to_assets(path: str) -> Path:
-    print(ASSETS_PATH / Path(path))
-    return ASSETS_PATH / Path(path)
+def relative_to_assets(path: str):
+    return "./assets/" + path
 
 
 class OnlySave:
     def __init__(self, master):
         self.master = master
+        self.master.title("OnlySave")
+        self.master.iconbitmap("assets/logo.ico")
         self.master.resizable(False, False)
         self.master.geometry("1440x900")
         self.master.configure(bg="#FFFFFF")
@@ -170,9 +170,12 @@ class OnlySave:
         )
 
         self.ONLYFANS = "https://onlyfans.com/"
+
         options = webdriver.ChromeOptions()
         options.binary_location = r"CHROME/chrome.exe"
-        self.driver = webdriver.Chrome("CHROME/chromedriver.exe", options=options)
+        options.add_argument("--log-level=OFF")
+        args = ["hide_console", ]
+        self.driver = webdriver.Chrome("CHROME/chromedriver.exe", options=options, service_args=args)
         self.driver.get(self.ONLYFANS)
         self.scrolling = False
         self.current_user = None
@@ -258,7 +261,7 @@ class OnlySave:
 
         self.master.destroy()
         self.driver.quit()
-        os.startfile("OnlySave_GUI.py")
+        os.startfile("OnlySave.exe")
 
 
 if __name__ == "__main__":

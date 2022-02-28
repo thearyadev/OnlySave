@@ -1,6 +1,7 @@
 from OnlySave import OnlySave
 from tkinter import Tk
 
+import time
 
 def main():
     root = Tk()
