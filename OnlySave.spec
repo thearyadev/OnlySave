@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-# smile
+# smile2
 block_cipher = None
 
 from os.path import join, dirname, abspath, split
