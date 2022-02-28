@@ -1,4 +1,5 @@
-from tkinter import Tk, Label, Button, Canvas, PhotoImage, NW, Text, DISABLED, NORMAL
+from pathlib import Path
+from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage
 from PIL import Image, ImageTk
 import sys
 from seleniumwire import webdriver
@@ -15,82 +16,253 @@ import shutil
 import os
 
 
+OUTPUT_PATH = Path(__file__).parent
+ASSETS_PATH = OUTPUT_PATH / Path("./assets")
+
+
+def relative_to_assets(path: str) -> Path:
+    print(ASSETS_PATH / Path(path))
+    return ASSETS_PATH / Path(path)
+
+
 class OnlySave:
     def __init__(self, master):
-        # window setup
         self.master = master
-        self.master.geometry("500x500")
-        master.title("OnlySave")
-        self.title_label = Label(master, text="OnlySave")
-        self.title_label.pack()
-        self.prompt = Label(master, text="Log into OnlyFans using the web browser, then press start.", fg="#eb4034")
-        self.textarea = Text(master, height=1, width=30)
-        self.textarea.pack()
-        self.prompt.pack()
-        self.startBtn = Button(master, text='Start', width=50, height=3, command=self.get_page)  # starts program
-        self.startBtn.pack()
-        self.preview_label = Label(master, text="Currently downloading:")
-        self.preview_label.pack()
+        self.master.resizable(False, False)
+        self.master.geometry("1440x900")
+        self.master.configure(bg="#FFFFFF")
+        self.canvas = Canvas(
+            master,
+            bg="#FFFFFF",
+            height=900,
+            width=1440,
+            bd=0,
+            highlightthickness=0,
+            relief="ridge"
+        )
 
-        self.preview = Label(master)
-        # self.preview.image = pil_tk_image
-        self.preview.pack()
+        self.canvas.place(x=0, y=0)
+        self.image_image_1 = PhotoImage(
+            file=relative_to_assets("image_1.png"))
+
+        image_1 = self.canvas.create_image(
+            1045.0,
+            449.0,
+            image=self.image_image_1,
+            tags="preview_image"
+        )
+
+        self.canvas.create_text(
+            124.0,
+            150.0,
+            anchor="nw",
+            text="OnlySave",
+            fill="#000000",
+            font=("Poppins Medium", 30 * -1)
+
+        )
+
+        self.canvas.create_text(
+            923.0,
+            437.0,
+            anchor="nw",
+            text="Preview will be displayed here. ",
+            fill="#FFFFFF",
+            font=("Poppins Regular", 16 * -1),
+            tags="preview_label"
+        )
+
+        self.canvas.create_text(
+            124.0,
+            195.0,
+            anchor="nw",
+            text="Login using the web browser.\nOnce logged in, enter an account name and press the start button.",
+            fill="#000000",
+            font=("Poppins Regular", 16 * -1)
+        )
+
+        self.canvas.create_text(
+            124.0,
+            256.0,
+            anchor="nw",
+            text="Enter the OnlyFans account name you would like to download from",
+            fill="#999999",
+            font=("Poppins Medium", 13 * -1)
+        )
+
+        self.canvas.create_rectangle(
+            124.0,
+            318.0,
+            569.0,
+            320.0,
+            fill="#000741",
+            outline="")
+
+        button_image_1 = PhotoImage(
+            file=relative_to_assets("button_1.png"))
+        self.button_1 = Button(
+            image=button_image_1,
+            borderwidth=0,
+            highlightthickness=0,
+            command=self.start_program,
+            relief="flat"
+        )
+
+        self.button_1.image = button_image_1
+
+        self.button_1.place(
+            x=124.0,
+            y=362.0,
+            width=429.0,
+            height=53.0
+        )
+
+        button_image_2 = PhotoImage(
+            file=relative_to_assets("SCROLL_ENABLED.png"))
+        self.button_2 = Button(
+            image=button_image_2,
+            borderwidth=0,
+            highlightthickness=0,
+            command=self.toggleScroll,
+            relief="flat"
+        )
+        self.button_2.image = button_image_2
+        self.button_2.place(
+            x=122.0,
+            y=430.0,
+            width=183.0,
+            height=53.0
+        )
+
+        button_image_3 = PhotoImage(
+            file=relative_to_assets("button_3.png"))
+        self.button_3 = Button(
+            image=button_image_3,
+            borderwidth=0,
+            highlightthickness=0,
+            command=self.parse_and_download,
+            relief="flat"
+        )
+        self.button_3.image = button_image_3
+        self.button_3.place(
+            x=316.0,
+            y=430.0,
+            width=237.0,
+            height=53.0
+        )
+
+        entry_image_1 = PhotoImage(
+            file=relative_to_assets("entry_1.png"))
+        self.entry_bg_1 = self.canvas.create_image(
+            346.5,
+            298.5,
+            image=entry_image_1
+        )
+        self.entry_1 = Entry(
+            bd=0,
+            bg="#FFFFFF",
+            highlightthickness=0
+        )
+        self.entry_1.place(
+            x=124.0,
+            y=281.0,
+            width=445.0,
+            height=33.0
+        )
 
         self.ONLYFANS = "https://onlyfans.com/"
         options = webdriver.ChromeOptions()
         options.binary_location = r"CHROME/chrome.exe"
         self.driver = webdriver.Chrome("CHROME/chromedriver.exe", options=options)
         self.driver.get(self.ONLYFANS)
+        self.scrolling = False
+        self.current_user = None
 
-    def capture_and_parse(self):
-        data = self.driver.requests  # gets all requests from the browser
-        links = []  # stores all urls
-        for request in data:
-            if request.url.startswith("https://cdn2."):  # checks if it is a Onlyfans image.
-                links.append(request.url)
-        self.download(links)  # starts downloading all the links
+    def start_program(self):
+        self.current_user = self.entry_1.get()
+        if self.current_user:
+            self.entry_1.config(state="disabled")
+            self.button_1.config(state="disabled")
+            self.driver.get(self.ONLYFANS + self.current_user)
 
-    def download(self, links):
+    def toggleScroll(self):
+        if not self.scrolling:
+            # start scrolling, change var to is scrolling
+            # loop scrolling; if scrolling changes to False again; break
+            self.scrolling = True
+            while self.scrolling:
+                img = PhotoImage(file=relative_to_assets("SCROLL_DISABLED.png"))
+                self.button_2.configure(
+                    image=img
+                )
+                self.button_2.image = img
+                # start scrolling
+                self.button_2.after(1000, lambda: self.driver.execute_script(
+                    "window.scrollTo(0, document.body.scrollHeight);"))
+                # update master
+                self.master.update()
+
+            img = PhotoImage(file=relative_to_assets("SCROLL_ENABLED.png"))
+            self.button_2.configure(
+                image=img
+            )
+            self.button_2.image = img
+        else:
+            self.scrolling = False
+
+    def parse_and_download(self):
+
+        def update_preview(canvas, new_image):
+            canvas.delete("preview_image")
+            canvas.delete("preview_label")
+            i = Image.open(new_image)
+            pil_tk = ImageTk.PhotoImage(i)
+            width, height = i.size
+            basewidth = 800
+            wpercent = (basewidth / float(i.size[0]))
+            hsize = int((float(i.size[1]) * float(wpercent)))
+            i = i.resize((basewidth, hsize), Image.ANTIALIAS)
+            pil_tk = ImageTk.PhotoImage(i)
+
+            self.image_1 = canvas.create_image(
+                1045.0,
+                449.0,
+                image=pil_tk,
+                tags="preview_image"
+            )
+            self.master.update()
+
+        data = self.driver.requests
+
         try:  # make new dir with the onlyfans account name
-            os.mkdir("./" + self.textarea.get("1.0", "end-1c"))
+            os.mkdir("./" + self.current_user)
         except FileExistsError:
-            shutil.rmtree("./" + self.textarea.get("1.0", "end-1c"))  # if it exists, delete the existing one.
+            shutil.rmtree("./" + self.current_user)  # if it exists, delete the existing one.
         finally:
             try:
-                os.mkdir("./" + self.textarea.get("1.0", "end-1c"))  # try and make it again
+                os.mkdir("./" + self.current_user)  # try and make it again
             except FileExistsError:
                 pass
 
-        self.startBtn['state'] = DISABLED  # disable button
+        for request in data:
+            if request.url.startswith("https://cdn2."):
+                try:
+                    image_path = "./" + self.current_user + "/" + uuid.uuid4().hex + ".gif"
+                    with open(image_path, "wb") as image_file:
+                        image_file.write(requests.get(request.url).content)
+                        update_preview(self.canvas, image_path)
+                except:
+                    pass
 
-        for link in links:
-            try:
-                time.sleep(0.5)  # avoid getting request timeout
-                # save it as a gif to display in GUI
-                path = "./" + self.textarea.get("1.0", "end-1c") + "/" + uuid.uuid4().hex + ".gif"
-                with open(path, "wb") as file:  # open file
-                    file.write(requests.get(link).content)  # request for the content and write
-                    # download, write, show image
-                    pil_image = Image.open(path)  # show image in gui
-                    pil_image.thumbnail((400, 400))
-                    pil_tk_image = ImageTk.PhotoImage(pil_image)
-                    self.preview.configure(image=pil_tk_image)
-                    self.preview.image = pil_tk_image
-                    self.master.update()  # update screen
-            except:
-                pass  # skip if any errors. Output doesnt matter too much
+        for f in os.listdir("./" + self.current_user):
+            os.rename("./" + self.current_user + "/" + f, "./" + self.current_user + "/" + f.replace("gif", "jpg"))
 
-        for f in os.listdir("./" + self.textarea.get("1.0", "end-1c")):  # renames all the files to .jpg
-            os.rename("./" + self.textarea.get("1.0", "end-1c") + "/" + f,
-                      "./" + self.textarea.get("1.0", "end-1c") + "/" + f.replace("gif", "jpg"))
-        self.driver.close()  # ends the program. Didnt want to figure out resetting the screen lol
-        self.master.destory()
+        self.master.destroy()
+        self.driver.quit()
+        os.startfile("OnlySave_GUI.py")
 
-        sys.exit(0)
 
-    def get_page(self):
-        self.driver.get(self.ONLYFANS + self.textarea.get("1.0", "end-1c"))  # gets page from submitted input
-        self.textarea.pack_forget()  # hides textarea
-        self.startBtn.configure(text="Begin Downloading")  # updates button
-        self.prompt.configure(text="Currently listening for image data.. Press the button to capture and download.")
-        self.startBtn.configure(command=self.capture_and_parse)  # next step with button press
+if __name__ == "__main__":
+    root = Tk()
+    window = OnlySave(root)
+    root.mainloop()
