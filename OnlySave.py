@@ -9,7 +9,6 @@ from selenium.webdriver.common.keys import Keys
 import requests
 import uuid
 
-from rich import print
 import time
 import shutil
 
