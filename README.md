@@ -2,10 +2,10 @@
 
 ## Usage
 
-Executable available in latest release. Run OnlySave.exe
-Only works on Windows. 
+Download the setup executable from the latest release. Install and run.
+Only works on Windows currently.
 
-To run the source code
+To run the source code:
 
 1. Install dependencies
 2. Install Chrome and copy the folder /ProgramFiles/Google/Chrome to the project root directory with the name ./CHROME 
