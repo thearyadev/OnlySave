@@ -3,9 +3,11 @@ from tkinter import Tk
 
 import time
 
+
 def main():
     root = Tk()
     window = OnlySave(root)
+    window.init_browser()
     root.mainloop()
 
 
